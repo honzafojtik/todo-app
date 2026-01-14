@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand};
-use std::fs::{File, OpenOptions};
+use std::fs::File;
 use std::io::{BufRead, BufReader, Error, Write};
 use std::path::Path;
 
@@ -24,7 +24,7 @@ impl TodoItem {
     }
 
     fn db_print(&self) -> String {
-        format!("{}, {}, {}\n", self.id, self.task, self.completed)
+        format!("{},{},{}", self.id, self.task, self.completed)
     }
 }
 struct TodoList {
@@ -52,9 +52,9 @@ impl TodoList {
         if path.exists() {
             let file_contents = File::open(file_path)?;
             let buff = BufReader::new(file_contents);
-            for line in buff.lines() {
-                let line = line?;
-                let mut parts: Vec<&str> = line.split(",").collect();
+            for line_result in buff.lines() {
+                let line = line_result?;
+                let parts: Vec<&str> = line.split(",").collect();
 
                 let id: i32 = String::from(parts[0]).parse().unwrap();
                 let task: String = String::from(parts[1]);
@@ -87,22 +87,9 @@ impl TodoList {
     }
 
     fn save_items(&self, file_path: &str) -> Result<(), Error> {
-        let path = Path::new(file_path);
-        if path.exists() {
-            let mut file = OpenOptions::new()
-                .append(true)
-                .open(file_path)
-                .expect("unable to open file for saving items");
-            for item in &self.items {
-                file.write_all(item.db_print().as_bytes())
-                    .expect("failed writing item to file");
-            }
-        } else {
-            let mut file = File::create(file_path)?;
-            for item in &self.items {
-                file.write_all(item.db_print().as_bytes())
-                    .expect("failed writing item to file");
-            }
+        let mut output = File::create(file_path)?;
+        for item in &self.items {
+            writeln!(output, "{}", item.db_print())?;
         }
         Ok(())
     }
@@ -149,7 +136,5 @@ fn main() -> Result<(), Error> {
     }
 
     todo_list.save_items(file_path)?;
-    todo_list.print_items();
-
     Ok(())
 }
