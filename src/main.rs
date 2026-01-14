@@ -24,7 +24,7 @@ impl TodoItem {
     }
 
     fn db_print(&self) -> String {
-        format!("{},{},{}", self.id, self.task, self.completed)
+        format!("{}|{}|{}", self.id, self.task, self.completed)
     }
 }
 struct TodoList {
@@ -58,7 +58,7 @@ impl TodoList {
             let buff = BufReader::new(file_contents);
             for line_result in buff.lines() {
                 let line = line_result?;
-                let parts: Vec<&str> = line.split(",").collect();
+                let parts: Vec<&str> = line.split("|").collect();
 
                 let id: i32 = String::from(parts[0]).parse().unwrap();
                 let task: String = String::from(parts[1]);
