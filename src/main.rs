@@ -36,15 +36,19 @@ impl TodoList {
         Self { items: Vec::new() }
     }
 
-    fn new_item(&mut self, task: String) {
+    fn new_item(&mut self, task: String) -> Result<(), Error> {
         println!("in new_item");
-        let next_id = self.items.len() as i32;
+        let last_id = match self.items.last() {
+            Some(item) => item.id,
+            None => 0,
+        };
         let new_item = TodoItem {
-            id: next_id,
+            id: last_id + 1,
             task,
             completed: false,
         };
         self.items.push(new_item);
+        Ok(())
     }
 
     fn read_items(&mut self, file_path: &str) -> Result<(), Error> {
@@ -81,8 +85,14 @@ impl TodoList {
     }
 
     fn print_items(&self) {
-        for item in &self.items {
-            item.pretty_print();
+        if !&self.items.is_empty() {
+            for item in &self.items {
+                item.pretty_print();
+            }
+        } else {
+            println!(
+                "no items currently stored, try adding some with cargo run add <task_description>"
+            );
         }
     }
 
@@ -122,7 +132,7 @@ fn main() -> Result<(), Error> {
     todo_list.read_items(file_path)?;
     match args.command {
         Commands::Add { task } => {
-            todo_list.new_item(task);
+            todo_list.new_item(task)?;
         }
         Commands::Complete { id } => {
             todo_list.complete_item(id);
